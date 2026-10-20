@@ -1,0 +1,6 @@
+{
+  "name": "AetherBlog - Collaborative Publishing & Analytics",
+  "description": "Next-generation markdown publishing platform featuring end-to-end encrypted storage, real-time collaboration, author engagement analytics, and role-based access control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
