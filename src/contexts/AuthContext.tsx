@@ -6,6 +6,10 @@ interface AuthContextType {
   user: User | null;
   usersList: User[];
   isLoading: boolean;
+  isAdmin: boolean;
+  canViewDashboard: boolean;
+  canViewBackups: boolean;
+  canViewAudit: boolean;
   login: (email: string, password?: string) => Promise<boolean>;
   loginAs: (user: User) => void;
   register: (name: string, email: string, role: UserRole, title?: string) => Promise<boolean>;
@@ -18,8 +22,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_USER_KEY = 'aether_auth_user_v1';
-const USERS_LIST_KEY = 'aether_all_users_v1';
+const AUTH_USER_KEY = 'aether_auth_user_v2';
+const USERS_LIST_KEY = 'aether_all_users_v2';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -46,6 +50,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const isAdmin = user?.role === 'admin';
+  const canViewDashboard = isAdmin;
+  const canViewBackups = isAdmin;
+  const canViewAudit = isAdmin;
+
   const login = async (email: string): Promise<boolean> => {
     const found = usersList.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (found) {
@@ -55,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         action: 'AUTH_LOGIN',
         actorName: found.name,
         actorRole: found.role,
-        details: `Signed in as ${found.name} (${found.role})`,
+        details: `Signed in as ${found.name} (${found.role === 'admin' ? 'Administrator' : 'Author & Editor'})`,
         status: 'info',
       });
       return true;
@@ -81,9 +90,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       name,
       email,
       role,
-      title: title || (role === 'admin' ? 'System Administrator' : role === 'editor' ? 'Contributing Editor' : 'Author'),
+      title: title || (role === 'admin' ? 'System Administrator' : 'Author & Editor'),
       avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=240&q=80`,
-      bio: 'Author on AetherBlog.',
+      bio: 'Author & Editor on AetherBlog.',
     };
 
     const updated = [...usersList, newUser];
@@ -110,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         action: 'AUTH_LOGOUT',
         actorName: user.name,
         actorRole: user.role,
-        details: `User ${user.name} logged out. Session terminated.`,
+        details: `User ${user.name} logged out. Session terminated immediately.`,
         status: 'info',
       });
     }
@@ -134,7 +143,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const canEditPost = (post: Post): boolean => {
     if (!user) return false;
-    if (user.role === 'admin' || user.role === 'editor') return true;
+    if (user.role === 'admin') return true;
+    // Writer (Author & Editor) can edit their own posts
     return post.authorId === user.id;
   };
 
@@ -145,8 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const canPublish = (): boolean => {
-    if (!user) return false;
-    return user.role === 'admin' || user.role === 'editor';
+    return !!user; // Both Admin and Writer (Author & Editor) can write and publish blogs
   };
 
   return (
@@ -155,6 +164,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         usersList,
         isLoading,
+        isAdmin,
+        canViewDashboard,
+        canViewBackups,
+        canViewAudit,
         login,
         loginAs,
         register,

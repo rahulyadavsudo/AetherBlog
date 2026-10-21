@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { useTheme } from '../contexts/ThemeContext.tsx';
-import { Shield, Lock, Users, Sparkles, ArrowRight, Sun, Moon, CheckCircle2 } from 'lucide-react';
+import { Shield, Lock, Users, ArrowRight, Sun, Moon, CheckCircle2, Cpu } from 'lucide-react';
 import { UserRole } from '../types/index.ts';
 
 export const LoginScreen: React.FC = () => {
@@ -13,7 +13,7 @@ export const LoginScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
-  const [regRole, setRegRole] = useState<UserRole>('author');
+  const [regRole, setRegRole] = useState<UserRole>('writer');
   const [regTitle, setRegTitle] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,7 +25,7 @@ export const LoginScreen: React.FC = () => {
     try {
       const ok = await login(email, password);
       if (!ok) {
-        setErrorMessage('Invalid credentials. Please select one of the pre-configured accounts or register.');
+        setErrorMessage('Invalid credentials. Select one of the pre-configured profiles or register.');
       }
     } catch {
       setErrorMessage('Authentication service error.');
@@ -59,59 +59,68 @@ export const LoginScreen: React.FC = () => {
           <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
             Æ
           </div>
-          <span className="text-xl font-bold tracking-tight">AetherBlog</span>
+          <div>
+            <span className="text-xl font-bold tracking-tight">AetherBlog</span>
+            <span className="ml-2 text-xs font-mono text-indigo-600 dark:text-indigo-400">
+              Microservices Edition
+            </span>
+          </div>
         </div>
 
         <button
           onClick={toggleTheme}
           className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          title="Toggle theme"
+          title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} theme`}
           aria-label="Toggle theme"
         >
-          {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5 text-amber-400" />}
+          {theme === 'light' ? (
+            <Moon className="w-5 h-5 text-slate-700" />
+          ) : (
+            <Sun className="w-5 h-5 text-amber-400" />
+          )}
         </button>
       </div>
 
       {/* Main card container */}
-      <div className="w-full max-w-4xl mx-auto px-4 py-8">
+      <div className="w-full max-w-4xl mx-auto px-4 py-6">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-          {/* Left panel: Product overview & Security highlight */}
+          {/* Left panel: Architecture overview */}
           <div className="lg:col-span-5 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800">
             <div>
               <div className="inline-flex items-center gap-2 text-xs font-mono text-indigo-400 mb-6">
-                <Shield className="w-4 h-4" />
-                <span>Zero-Knowledge Publishing</span>
+                <Cpu className="w-4 h-4" />
+                <span>Microservice-Orchestrated Engine</span>
               </div>
               <h2 className="text-2xl font-bold tracking-tight leading-snug mb-4">
-                Sovereign prose with end-to-end encryption.
+                Polyglot architecture with Python, Rust & Go.
               </h2>
               <p className="text-slate-300 text-sm leading-relaxed mb-6">
-                AetherBlog is built for writers, editors, and research collectives. Draft markdown cooperatively, track granular engagement metrics, and secure sensitive texts with client-side AES-256-GCM.
+                Engineered for serious publishers. Python handles NLP analytics, Rust drives high-throughput cryptographic verification, and Go brokers concurrent collaborative editing locks.
               </p>
 
-              <div className="space-y-3.5 text-xs text-slate-300">
+              <div className="space-y-3 text-xs text-slate-300">
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Real-time co-authoring with multi-cursor presence</span>
+                  <span><strong>Admin</strong>: Exclusive dashboard, automated backups & cluster telemetry</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Personalized author telemetry & read-depth ratios</span>
+                  <span><strong>Author & Editor</strong>: Write blogs, edit drafts, and publish manuscripts</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Automated revision sync & encrypted vault export</span>
+                  <span>Real-time collaborative editing with multi-cursor presence</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Strict role-based access control & audit trail</span>
+                  <span>Client-side AES-256-GCM zero-knowledge encryption</span>
                 </div>
               </div>
             </div>
 
             <div className="mt-8 pt-6 border-t border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between font-mono">
-              <span>Security Tier: AES-256-GCM</span>
-              <span>PBKDF2-100K</span>
+              <span>Python · Rust · Go</span>
+              <span>AES-256-GCM</span>
             </div>
           </div>
 
@@ -170,7 +179,7 @@ export const LoginScreen: React.FC = () => {
             {activeTab === 'quick' && (
               <div className="space-y-4">
                 <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                  Select a pre-configured role to immediately enter the authenticated workspace:
+                  Select a profile to enter the workspace with its role permissions:
                 </div>
 
                 <div className="space-y-2.5">
@@ -201,12 +210,10 @@ export const LoginScreen: React.FC = () => {
                           className={`text-[11px] uppercase font-mono font-bold px-2 py-0.5 rounded ${
                             u.role === 'admin'
                               ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'
-                              : u.role === 'editor'
-                              ? 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300'
-                              : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
+                              : 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300'
                           }`}
                         >
-                          {u.role}
+                          {u.role === 'admin' ? 'Admin' : 'Author & Editor'}
                         </span>
                         <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 group-hover:text-indigo-500 transition-all" />
                       </div>
@@ -256,10 +263,6 @@ export const LoginScreen: React.FC = () => {
                     {isSubmitting ? 'Authenticating...' : 'Sign In to Workspace'}
                   </button>
                 </div>
-
-                <p className="text-[11px] text-slate-500 text-center">
-                  Tip: You can use any default email (e.g. <span className="font-mono text-indigo-500">elena@aetherblog.internal</span>) or select from the Quick Profiles tab.
-                </p>
               </form>
             )}
 
@@ -297,27 +300,26 @@ export const LoginScreen: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Assigned Role
+                      Role Assignment
                     </label>
                     <select
                       value={regRole}
                       onChange={e => setRegRole(e.target.value as UserRole)}
                       className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
-                      <option value="author">Author (Create & Track)</option>
-                      <option value="editor">Editor (Publish & Review)</option>
-                      <option value="admin">Admin (Full Control)</option>
+                      <option value="writer">Author & Editor (Write & Edit)</option>
+                      <option value="admin">Administrator (Full Access)</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Title / Specialty
+                      Professional Title
                     </label>
                     <input
                       type="text"
                       value={regTitle}
                       onChange={e => setRegTitle(e.target.value)}
-                      placeholder="Senior Contributor"
+                      placeholder="Senior Technical Writer"
                       className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
@@ -340,7 +342,7 @@ export const LoginScreen: React.FC = () => {
 
       {/* Footer quiet branding */}
       <footer className="w-full py-6 text-center text-xs text-slate-400 dark:text-slate-600">
-        AetherBlog &copy; 2026. Zero telemetry · Client-Side Cryptographic Vault.
+        AetherBlog &copy; 2026. Zero telemetry · Multi-Language Microservice Core.
       </footer>
     </div>
   );

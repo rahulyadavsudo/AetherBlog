@@ -4,6 +4,7 @@ import { Post, PostStatus, PostRevision, Collaborator, PostComment } from '../ty
 import { MarkdownRenderer } from './MarkdownRenderer.tsx';
 import { encryptContent, decryptContent } from '../lib/crypto.ts';
 import { addActivityLog } from '../lib/storage.ts';
+import { runPythonAnalysis } from '../lib/microservices.ts';
 import {
   Save,
   Eye,
@@ -95,6 +96,21 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const [comments, setComments] = useState<PostComment[]>(initialPost?.comments || []);
   const [newCommentText, setNewCommentText] = useState('');
   const [showCommentsSidebar, setShowCommentsSidebar] = useState(false);
+  // Python Microservice Analysis
+  const [showPythonModal, setShowPythonModal] = useState(false);
+  const [isAnalyzingPython, setIsAnalyzingPython] = useState(false);
+  const [pythonResults, setPythonResults] = useState<any | null>(null);
+
+  const handleRunPythonAnalysis = async () => {
+    setIsAnalyzingPython(true);
+    setShowPythonModal(true);
+    try {
+      const res = await runPythonAnalysis(content);
+      setPythonResults(res);
+    } finally {
+      setIsAnalyzingPython(false);
+    }
+  };
 
   // Autosave and metrics computation
   const [lastSavedTime, setLastSavedTime] = useState<string>('Just now');
@@ -380,6 +396,16 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             >
               {isEncrypted ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
               <span>{isEncrypted ? 'E2EE Active' : 'Encrypt'}</span>
+            </button>
+
+            {/* Python NLP Analysis Button */}
+            <button
+              onClick={handleRunPythonAnalysis}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
+              title="Analyze text with Python NLP microservice"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Python NLP</span>
             </button>
 
             {/* Revisions History Drawer Toggle */}
@@ -879,6 +905,84 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 ))
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Python Microservice NLP Analysis Modal */}
+      {showPythonModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-blue-500" />
+                <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
+                  Python NLP Readability & Metrics
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowPythonModal(false)}
+                className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
+            {isAnalyzingPython ? (
+              <div className="py-12 text-center text-xs text-slate-500 font-mono">
+                Dispatching manuscript payload to Python 3.10 microservice...
+              </div>
+            ) : pythonResults ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+                    <span className="text-slate-500 block mb-0.5">Flesch-Kincaid Level</span>
+                    <span className="text-sm font-bold font-mono text-indigo-600 dark:text-indigo-400">
+                      {pythonResults.reading_grade}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+                    <span className="text-slate-500 block mb-0.5">Sentiment Tone</span>
+                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                      {pythonResults.sentiment}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+                    <span className="text-slate-500 block mb-0.5">Lexical Diversity (TTR)</span>
+                    <span className="text-sm font-bold font-mono tabular-nums text-slate-900 dark:text-slate-100">
+                      {pythonResults.lexical_diversity}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+                    <span className="text-slate-500 block mb-0.5">Execution Roundtrip</span>
+                    <span className="text-sm font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+                      {pythonResults.latency_ms} ms
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 text-xs">
+                  <span className="text-slate-500 block mb-1.5 font-medium">Top Keywords Extracted by Python:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {pythonResults.top_keywords.map((kw: string, i: number) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 rounded font-mono text-[11px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                      >
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-2 text-[11px] font-mono text-slate-400 text-right">
+                  Runtime: {pythonResults.engine}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

@@ -7,26 +7,26 @@ export const DEFAULT_USERS: User[] = [
     email: 'elena@aetherblog.internal',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=240&q=80',
     role: 'admin',
-    title: 'Editor-in-Chief & Lead Architect',
-    bio: 'Oversees publication standards, cryptographic security audits, and systems architecture.'
+    title: 'Platform Administrator & Architect',
+    bio: 'Oversees publication security, microservice clusters, automated backup vaults, and platform governance.'
   },
   {
-    id: 'user_editor_marcus',
+    id: 'user_writer_marcus',
     name: 'Marcus Vance',
     email: 'marcus@aetherblog.internal',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=80',
-    role: 'editor',
-    title: 'Senior Managing Editor',
-    bio: 'Manages peer reviews, editorial curation, and live collaborative workflows.'
+    role: 'writer',
+    title: 'Author & Editor (Systems)',
+    bio: 'Writes and edits in-depth technical essays on distributed databases and system scalability.'
   },
   {
-    id: 'user_author_maya',
+    id: 'user_writer_maya',
     name: 'Maya Lin',
     email: 'maya@aetherblog.internal',
     avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=240&q=80',
-    role: 'author',
-    title: 'Staff Research Writer',
-    bio: 'Specializes in distributed databases, cryptographic consensus, and technical deep-dives.'
+    role: 'writer',
+    title: 'Author & Editor (AI Research)',
+    bio: 'Writes and edits research memos on multi-agent consensus and cryptographic security.'
   }
 ];
 
@@ -102,7 +102,7 @@ Autonomous agents coordinated through deterministic protocol contracts are redef
 ## Key Protocols & Governance
 
 - **Zero-Knowledge Draft Verification**: Authors sign drafts with client keys before syncing.
-- **Role Isolation**: Editors can suggest changes while authors maintain sovereign ownership.
+- **Role Isolation**: Writers maintain sovereign ownership over their manuscripts and revisions.
 - **Continuous Audit Log**: Every edit operation appends an immutable hash.
 
 \`\`\`json
@@ -153,7 +153,7 @@ const SEED_POSTS: Post[] = [
     authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=240&q=80',
     authorRole: 'admin',
     category: 'Architecture',
-    tags: ['Distributed Systems', 'PostgreSQL', 'High Availability', 'Architecture'],
+    tags: ['Distributed Systems', 'Microservices', 'High Availability', 'Architecture'],
     publishedAt: '2026-10-18T14:30:00Z',
     createdAt: '2026-10-14T09:00:00Z',
     updatedAt: '2026-10-19T11:20:00Z',
@@ -183,6 +183,9 @@ const SEED_POSTS: Post[] = [
         { source: 'Newsletter Subscribers', percentage: 12, count: 1715 },
       ],
       deviceBreakdown: { mobile: 52, desktop: 42, tablet: 6 },
+      nlpSentiment: 'Constructive / Architectural',
+      readabilityGrade: 'Grade 12.4 (Collegiate)',
+      processedBy: 'Python 3.10 Worker',
     },
     revisions: [
       {
@@ -204,23 +207,14 @@ const SEED_POSTS: Post[] = [
     ],
     collaborators: [
       {
-        userId: 'user_editor_marcus',
+        userId: 'user_writer_marcus',
         name: 'Marcus Vance',
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=80',
-        role: 'editor',
+        role: 'writer',
         color: '#6366f1',
         activeNow: true,
         cursorLine: 24,
         statusText: 'Reviewing latency table',
-      },
-      {
-        userId: 'user_author_maya',
-        name: 'Maya Lin',
-        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=240&q=80',
-        role: 'author',
-        color: '#10b981',
-        activeNow: false,
-        statusText: 'Last edited 2 hours ago',
       },
     ],
     comments: [
@@ -228,7 +222,7 @@ const SEED_POSTS: Post[] = [
         id: 'c_01',
         authorName: 'Marcus Vance',
         authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=80',
-        authorRole: 'editor',
+        authorRole: 'writer',
         content: 'The backoff jitter formula looks exceptionally clean. Let us verify the P99 numbers against the latest run before the morning newsletter release.',
         createdAt: '2026-10-18T10:14:00Z',
         resolved: false,
@@ -243,10 +237,10 @@ const SEED_POSTS: Post[] = [
     content: INITIAL_POST_2_CONTENT,
     coverImage: '/src/assets/images/editorial_ai_systems_1792495931449.jpg',
     status: 'draft',
-    authorId: 'user_author_maya',
+    authorId: 'user_writer_maya',
     authorName: 'Maya Lin',
     authorAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=240&q=80',
-    authorRole: 'author',
+    authorRole: 'writer',
     category: 'AI & Security',
     tags: ['Multi-Agent', 'Zero-Knowledge', 'E2EE', 'Cryptography'],
     createdAt: '2026-10-17T11:00:00Z',
@@ -280,17 +274,11 @@ const SEED_POSTS: Post[] = [
         { source: 'Encrypted Peer Link', percentage: 30, count: 126 },
       ],
       deviceBreakdown: { mobile: 25, desktop: 70, tablet: 5 },
+      nlpSentiment: 'Technical & Secure',
+      readabilityGrade: 'Grade 11.2',
+      processedBy: 'Python 3.10 Worker',
     },
-    revisions: [
-      {
-        id: 'rev_e2ee_1',
-        timestamp: '2026-10-17T11:00:00Z',
-        authorName: 'Maya Lin',
-        summary: 'Encrypted first pass of multi-agent specification',
-        wordCount: 490,
-        content: INITIAL_POST_2_CONTENT,
-      },
-    ],
+    revisions: [],
     collaborators: [
       {
         userId: 'user_admin_elena',
@@ -313,10 +301,10 @@ const SEED_POSTS: Post[] = [
     content: INITIAL_POST_3_CONTENT,
     coverImage: '/src/assets/images/editorial_writing_craft_1792495931728.jpg',
     status: 'published',
-    authorId: 'user_editor_marcus',
+    authorId: 'user_writer_marcus',
     authorName: 'Marcus Vance',
     authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=80',
-    authorRole: 'editor',
+    authorRole: 'writer',
     category: 'Editorial',
     tags: ['Writing', 'Markdown', 'Productivity', 'Typography'],
     publishedAt: '2026-10-12T08:00:00Z',
@@ -347,6 +335,9 @@ const SEED_POSTS: Post[] = [
         { source: 'Social Channels (X / Threads)', percentage: 20, count: 1789 },
       ],
       deviceBreakdown: { mobile: 64, desktop: 30, tablet: 6 },
+      nlpSentiment: 'Objective & Reflective',
+      readabilityGrade: 'Grade 9.8',
+      processedBy: 'Python 3.10 Worker',
     },
     revisions: [],
     collaborators: [],
@@ -357,7 +348,7 @@ const SEED_POSTS: Post[] = [
 const INITIAL_LOGS: ActivityLog[] = [
   {
     id: 'log_01',
-    timestamp: '2026-10-20T04:20:15Z',
+    timestamp: '2026-10-21T03:40:15Z',
     action: 'BACKUP_SYNC',
     actorName: 'System Daemon',
     actorRole: 'admin',
@@ -366,20 +357,20 @@ const INITIAL_LOGS: ActivityLog[] = [
   },
   {
     id: 'log_02',
-    timestamp: '2026-10-20T03:52:10Z',
+    timestamp: '2026-10-21T03:22:10Z',
     action: 'COLLAB_JOIN',
     actorName: 'Marcus Vance',
-    actorRole: 'editor',
+    actorRole: 'writer',
     details: 'Joined collaborative session on "Engineering Resilient Distributed Architecture"',
     entityId: 'post_001_distributed_systems',
     status: 'info',
   },
   {
     id: 'log_03',
-    timestamp: '2026-10-19T08:45:00Z',
+    timestamp: '2026-10-20T08:45:00Z',
     action: 'E2EE_ENCRYPT',
     actorName: 'Maya Lin',
-    actorRole: 'author',
+    actorRole: 'writer',
     details: 'Encrypted document body using AES-256-GCM / PBKDF2-SHA256 (100k rounds)',
     entityId: 'post_002_ai_systems_e2ee',
     status: 'success',
@@ -405,9 +396,9 @@ const INITIAL_LOGS: ActivityLog[] = [
   },
 ];
 
-const POSTS_KEY = 'aether_posts_v1';
-const LOGS_KEY = 'aether_logs_v1';
-const BACKUPS_KEY = 'aether_backups_v1';
+const POSTS_KEY = 'aether_posts_v2';
+const LOGS_KEY = 'aether_logs_v2';
+const BACKUPS_KEY = 'aether_backups_v2';
 
 export function getPosts(): Post[] {
   try {
@@ -480,7 +471,6 @@ export function addActivityLog(
       ...log,
     };
     logs.unshift(newLog);
-    // keep max 100 logs
     const trimmed = logs.slice(0, 100);
     localStorage.setItem(LOGS_KEY, JSON.stringify(trimmed));
   } catch (err) {
@@ -528,7 +518,7 @@ export function createBackupSnapshot(autoGenerated = false): BackupSnapshot {
 
   const current = getBackupSnapshots();
   current.unshift(snapshot);
-  const trimmed = current.slice(0, 20); // Keep last 20 snapshots
+  const trimmed = current.slice(0, 20);
   localStorage.setItem(BACKUPS_KEY, JSON.stringify(trimmed));
 
   return snapshot;
@@ -554,7 +544,8 @@ export function exportBackupBundle(): string {
   const logs = getActivityLogs();
   const bundle = {
     exportedAt: new Date().toISOString(),
-    version: '1.0.0',
+    version: '2.0.0',
+    architecture: 'Microservices (Python + Rust + Go + React)',
     posts,
     logs,
   };

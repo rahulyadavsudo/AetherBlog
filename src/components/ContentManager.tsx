@@ -39,7 +39,7 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
   onNewPost,
 }) => {
   const { user, canEditPost, canDeletePost, canPublish } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<string>(user?.role === 'writer' ? 'my-posts' : 'all');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState<'updated' | 'views' | 'title'>('updated');
@@ -52,6 +52,9 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
   // Filter posts
   const filteredPosts = posts
     .filter(p => {
+      // My posts tab
+      if (activeTab === 'my-posts' && p.authorId !== user?.id) return false;
+
       // Status tab
       if (activeTab === 'published' && p.status !== 'published') return false;
       if (activeTab === 'draft' && p.status !== 'draft') return false;
@@ -99,10 +102,12 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Manuscript & Content Repository
+            {user?.role === 'writer' ? 'My Blog Manuscripts & Editor' : 'Manuscript & Content Repository'}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Authoritative catalog of drafts, published articles, and encrypted archival packages.
+            {user?.role === 'writer'
+              ? 'Compose, edit, and publish your blog posts with real-time markdown and peer collaboration.'
+              : 'Authoritative catalog of drafts, published articles, and encrypted archival packages.'}
           </p>
         </div>
 
@@ -120,7 +125,8 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
         {/* Status segmented tabs */}
         <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-medium overflow-x-auto">
           {[
-            { id: 'all', label: 'All Articles' },
+            ...(user?.role === 'writer' ? [{ id: 'my-posts', label: 'My Manuscripts' }] : []),
+            { id: 'all', label: user?.role === 'writer' ? 'All Publications' : 'All Articles' },
             { id: 'published', label: 'Published' },
             { id: 'draft', label: 'Drafts' },
             { id: 'encrypted', label: 'Encrypted' },

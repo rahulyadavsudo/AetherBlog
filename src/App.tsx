@@ -9,6 +9,7 @@ import { MarkdownEditor } from './components/MarkdownEditor.tsx';
 import { PostReader } from './components/PostReader.tsx';
 import { BackupManager } from './components/BackupManager.tsx';
 import { ActivityLogView } from './components/ActivityLogView.tsx';
+import { MicroservicesConsole } from './components/MicroservicesConsole.tsx';
 import { Post, PostStatus } from './types/index.ts';
 import {
   getPosts,
@@ -18,11 +19,11 @@ import {
   addActivityLog,
 } from './lib/storage.ts';
 
-type ActiveView = 'dashboard' | 'cms' | 'editor' | 'reader' | 'backups' | 'audit';
+type ActiveView = 'dashboard' | 'cms' | 'editor' | 'reader' | 'backups' | 'audit' | 'microservices';
 
 function MainApp() {
-  const { user, isLoading } = useAuth();
-  const [currentView, setCurrentView] = useState<ActiveView>('dashboard');
+  const { user, isAdmin, isLoading } = useAuth();
+  const [currentView, setCurrentView] = useState<ActiveView>('cms');
   const [posts, setPosts] = useState<Post[]>([]);
   const [activePost, setActivePost] = useState<Post | null>(null);
 
@@ -30,6 +31,25 @@ function MainApp() {
   useEffect(() => {
     setPosts(getPosts());
   }, []);
+
+  // Set default view on login based on user role
+  useEffect(() => {
+    if (user) {
+      if (isAdmin) {
+        // Admin starts at Dashboard
+        setCurrentView(prev => (prev === 'cms' ? 'dashboard' : prev));
+      } else {
+        // Author & Editor starts directly at My Manuscripts (CMS)
+        // Strictly prevent Writers from accessing Dashboard, Backups, Audit, or Microservices
+        setCurrentView(prev => {
+          if (prev === 'dashboard' || prev === 'backups' || prev === 'audit' || prev === 'microservices') {
+            return 'cms';
+          }
+          return prev;
+        });
+      }
+    }
+  }, [user, isAdmin]);
 
   // Strict Authentication Guard:
   // If no user is authenticated, render the Login Screen immediately.
@@ -151,11 +171,16 @@ function MainApp() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white transition-colors duration-200">
       <div>
         <Navbar
           currentView={currentView}
           onNavigate={view => {
+            // Role enforcement: Writers cannot navigate to admin-only views
+            if (!isAdmin && (view === 'dashboard' || view === 'backups' || view === 'audit' || view === 'microservices')) {
+              setCurrentView('cms');
+              return;
+            }
             setCurrentView(view);
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
@@ -163,7 +188,8 @@ function MainApp() {
         />
 
         <main className="w-full">
-          {currentView === 'dashboard' && (
+          {/* Dashboard is strictly for Admin */}
+          {currentView === 'dashboard' && isAdmin && (
             <Dashboard
               posts={posts}
               onSelectPost={handleSelectPost}
@@ -172,6 +198,7 @@ function MainApp() {
             />
           )}
 
+          {/* Content CMS / My Manuscripts */}
           {currentView === 'cms' && (
             <ContentManager
               posts={posts}
@@ -184,6 +211,7 @@ function MainApp() {
             />
           )}
 
+          {/* Markdown Editor */}
           {currentView === 'editor' && (
             <MarkdownEditor
               post={activePost}
@@ -192,6 +220,7 @@ function MainApp() {
             />
           )}
 
+          {/* Post Reader */}
           {currentView === 'reader' && activePost && (
             <PostReader
               post={activePost}
@@ -205,11 +234,18 @@ function MainApp() {
             />
           )}
 
-          {currentView === 'backups' && (
+          {/* Microservices Cluster (Admin Only) */}
+          {currentView === 'microservices' && isAdmin && (
+            <MicroservicesConsole posts={posts} />
+          )}
+
+          {/* Sync & Backups (Admin Only) */}
+          {currentView === 'backups' && isAdmin && (
             <BackupManager onDataRestored={handleDataRestored} />
           )}
 
-          {currentView === 'audit' && <ActivityLogView />}
+          {/* Audit Trail (Admin Only) */}
+          {currentView === 'audit' && isAdmin && <ActivityLogView />}
         </main>
       </div>
 
@@ -218,12 +254,12 @@ function MainApp() {
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-700 dark:text-slate-300">AetherBlog</span>
             <span>·</span>
-            <span>Zero-Knowledge Collaborative Publishing Platform</span>
+            <span>Microservices Core (Python NLP · Rust Crypto · Go Sync · Node)</span>
           </div>
           <div className="flex items-center gap-4 font-mono text-[11px]">
             <span>AES-256-GCM Verified</span>
             <span>·</span>
-            <span>Local Vault Persistent</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Active: {user.role === 'admin' ? 'Administrator' : 'Author & Editor'}</span>
           </div>
         </div>
       </footer>

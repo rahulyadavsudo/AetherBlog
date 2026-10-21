@@ -35,6 +35,17 @@ export const BackupManager: React.FC<BackupManagerProps> = ({ onDataRestored }) 
   const [selectedSnapshot, setSelectedSnapshot] = useState<BackupSnapshot | null>(null);
   const [confirmRestoreOpen, setConfirmRestoreOpen] = useState(false);
 
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16 text-center text-slate-900 dark:text-slate-100">
+        <h2 className="text-xl font-bold">Access Restricted to Administrator</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+          Automated backup vaults, database synchronization, and state recovery snapshots are restricted to Administrator accounts.
+        </p>
+      </div>
+    );
+  }
+
   const handleCreateSnapshot = () => {
     setIsSyncing(true);
     setTimeout(() => {
