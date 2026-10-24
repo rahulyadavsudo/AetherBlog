@@ -1,0 +1,111 @@
+name: Build, Scan, Push & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DH_NS: raaahulyadav
+
+jobs:
+  build-scan-push:
+    name: Build + Scan + Push
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: aetherblog-frontend
+            context: .
+          - image: aetherblog-go-sync-broker
+            context: ./microservices/go_sync_broker
+          - image: aetherblog-rust-crypto-engine
+            context: ./microservices/rust_crypto_engine
+          - image: aetherblog-python-analytics
+            context: ./microservices/python_analytics
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: false
+          tags: ${{ env.DH_NS }}/${{ matrix.image }}:latest
+          load: true
+
+      - name: Scan image (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.DH_NS }}/${{ matrix.image }}:latest
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+      - name: Push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: ${{ env.DH_NS }}/${{ matrix.image }}:latest
+
+  deploy:
+    name: Deploy to kind via ArgoCD
+    needs: build-scan-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: aetherblog
+
+      - name: Install ingress-nginx (kind)
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+          kubectl wait --namespace ingress-nginx \
+            --for=condition=ready pod \
+            --selector=app.kubernetes.io/component=controller \
+            --timeout=180s
+
+      - name: Install ArgoCD
+        run: |
+          kubectl create namespace argocd
+          kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argocd/stable/manifests/install.yaml
+          kubectl wait --for=condition=available --timeout=300s \
+            deployment/argocd-server -n argocd
+
+      - name: Create ArgoCD Application
+        run: kubectl apply -f argocd/application.yaml
+
+      - name: Wait for Sync + Health
+        run: |
+          for i in $(seq 1 60); do
+            sync=$(kubectl -n argocd get application aetherblog -o jsonpath='{.status.sync.status}' 2>/dev/null || echo Unknown)
+            health=$(kubectl -n argocd get application aetherblog -o jsonpath='{.status.health.status}' 2>/dev/null || echo Unknown)
+            echo "[$i] Sync=$sync Health=$health"
+            if [ "$sync" = "Synced" ] && [ "$health" = "Healthy" ]; then
+              echo "ArgoCD app is Synced and Healthy"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Timeout waiting for ArgoCD app"
+          kubectl -n argocd get application aetherblog -o yaml || true
+          exit 1
+
+      - name: Show deployed pods
+        run: |
+          kubectl get pods -n aetherblog -o wide
+          kubectl get svc,ingress -n aetherblog

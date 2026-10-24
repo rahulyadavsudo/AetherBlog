@@ -1,0 +1,38 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aetherblog-ingress
+  namespace: aetherblog
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /api/v1/presence
+            pathType: Prefix
+            backend:
+              service:
+                name: go-sync-broker
+                port:
+                  number: 8081
+          - path: /api/v1/digest
+            pathType: Prefix
+            backend:
+              service:
+                name: rust-crypto-engine
+                port:
+                  number: 8083
+          - path: /api/v1/analyze
+            pathType: Prefix
+            backend:
+              service:
+                name: python-analytics
+                port:
+                  number: 8082
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
